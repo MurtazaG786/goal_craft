@@ -1,4 +1,5 @@
-
+import os
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
 import google.genai as genai
 from app.core.config import settings
 import json
