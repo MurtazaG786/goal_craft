@@ -5,7 +5,7 @@ from langgraph.graph import StateGraph, END
 from app.services.ai.milestone_agent import generate_milestones
 from app.services.ai.task_agent import generate_tasks
 from app.services.gamification import assign_xp
-
+from app.services.scheduler import schedule_tasks
 
 def milestone_node(state):
 
@@ -27,6 +27,10 @@ def xp_node(state):
     tasks = assign_xp(state["tasks"])
     return {"tasks": tasks}
 
+def schedule_node(state):
+
+    tasks = schedule_tasks(state.get("tasks", []), state["deadline"])
+    return {"tasks": tasks}
 
 
 from app.services.ai.planner import generate_plan
@@ -44,11 +48,13 @@ def build_graph():
     graph.add_node("milestones", milestone_node)
     graph.add_node("tasks", task_node)
     graph.add_node("xp", xp_node)
+    graph.add_node("scheduling",schedule_node)
 
     graph.set_entry_point("milestones")
 
     graph.add_edge("milestones", "tasks")
     graph.add_edge("tasks", "xp")
-    graph.add_edge("xp", END)
+    graph.add_edge("xp","scheduling")
+    graph.add_edge("scheduling", END)
 
     return graph.compile()
