@@ -10,6 +10,12 @@ env/
 *.conda
 *.env
 
+node_modules/
+frontend/node_modules/
+package-lock.json
+.env
+dist/
+build/
 # Environment variables
 .env
 
