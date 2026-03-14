@@ -6,25 +6,38 @@ import json
 
 client=genai.Client(api_key=settings.GOOGLE_API_KEY)
 
-def generate_plan(goal: str, deadline: str):
+def generate_plan(goal: str, deadline: str,difficulty: str,description: str):
 
     prompt_text = f"""
-You are an expert strategic planner.
+You are an expert career and productivity planner.
 
-Break the goal into milestones and daily tasks.
+Create a structured learning roadmap.
 
-Goal: {goal}
+User Goal: {goal}
+User Description: {description}
+Difficulty Level: {difficulty}
 Deadline: {deadline}
 
-Return output in JSON format like this:
+Instructions:
+- Create 4–6 milestones.
+- Each milestone should contain multiple tasks.
+- Tasks should include difficulty and XP rewards.
+- Tasks must reference their milestone title.
+
+Return JSON in this format:
 
 {{
- "milestones":[
-   {{
-     "title": "",
-     "tasks":[]
-   }}
- ]
+  "milestones":[
+    {{"title":"Milestone Name"}}
+  ],
+  "tasks":[
+    {{
+      "milestone":"Milestone Name",
+      "title":"Task description",
+      "difficulty":"easy | medium | hard",
+      "xp":10
+    }}
+  ]
 }}
 """
 

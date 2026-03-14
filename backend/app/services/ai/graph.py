@@ -11,6 +11,7 @@ def milestone_node(state):
 
     result = generate_milestones(state["goal"], state["deadline"])
     milestones = result.get("milestones", [])
+    
     print("Generated milestones:", milestones)
     return {"milestones": milestones}
 

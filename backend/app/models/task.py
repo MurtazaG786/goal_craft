@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, Date
 from app.core.database import Base
 
 
@@ -15,3 +15,9 @@ class Task(Base):
     difficulty = Column(String)
 
     xp = Column(Integer)
+
+    type = Column(String, default="goal")
+
+    scheduled_date = Column(Date, nullable=True)
+
+    completed = Column(Boolean, default=False)

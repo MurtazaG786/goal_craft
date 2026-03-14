@@ -11,3 +11,5 @@ class Milestone(Base):
     goal_id = Column(Integer, ForeignKey("goals.id"))
 
     title = Column(String)
+
+    status = Column(String, default="locked")

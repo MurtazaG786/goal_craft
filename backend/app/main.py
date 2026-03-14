@@ -1,14 +1,37 @@
 from fastapi import FastAPI
-import os
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+from contextlib import asynccontextmanager
+
+from app.core.database import Base, engine
 from app.routers import goal_routes
-from app.core.database import engine, Base
-from app.models.milestone import Milestone
-from app.models.task import Task
-from app.models import goal
 
-app=FastAPI(title="Goal Craft")
 
-app.include_router(goal_routes.router, prefix="/goal")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
 
-Base.metadata.create_all(bind=engine)
+    print("⚠ Resetting database...")
+
+    # Drop all tables
+    Base.metadata.drop_all(bind=engine)
+
+    # Recreate tables
+    Base.metadata.create_all(bind=engine)
+
+    print("✅ Database recreated")
+
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
+
+# routers
+app.include_router(goal_routes.router, prefix="/goal", tags=["Goal"])
+
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)

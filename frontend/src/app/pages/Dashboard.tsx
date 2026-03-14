@@ -2,15 +2,14 @@ import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { useOutletContext } from "react-router";
 import { DailyTaskCard } from "../components/DailyTaskCard";
-import { MilestoneCard } from "../components/MilestoneCard";
 import { MotivationPanel } from "../components/MotivationPanel";
 import { Confetti } from "../components/Confetti";
 
 interface Task {
-  id: string;
+  id: number;
   title: string;
-  difficulty: "Easy" | "Medium" | "Hard";
-  xpReward: number;
+  difficulty: "easy" | "medium" | "hard";
+  xp: number;
   completed: boolean;
 }
 
@@ -18,51 +17,53 @@ interface OutletContext {
   onXPGain: (xp: number) => void;
 }
 
-const initialTasks: Task[] = [
-  { 
-    id: "1", 
-    title: "Morning meditation - 10 minutes", 
-    difficulty: "Easy", 
-    xpReward: 50, 
-    completed: false 
-  },
-  { 
-    id: "2", 
-    title: "Read 30 pages of a book", 
-    difficulty: "Medium", 
-    xpReward: 100, 
-    completed: false 
-  },
-  { 
-    id: "3", 
-    title: "Complete coding project milestone", 
-    difficulty: "Hard", 
-    xpReward: 200, 
-    completed: false 
-  },
-  { 
-    id: "4", 
-    title: "Exercise for 30 minutes", 
-    difficulty: "Medium", 
-    xpReward: 100, 
-    completed: false 
-  },
-  { 
-    id: "5", 
-    title: "Plan tomorrow's tasks", 
-    difficulty: "Easy", 
-    xpReward: 50, 
-    completed: false 
-  },
-];
-
 export function Dashboard() {
+
   const { onXPGain } = useOutletContext<OutletContext>();
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showConfetti, setShowConfetti] = useState(false);
 
   const completedTasksCount = tasks.filter(t => t.completed).length;
-  const allTasksCompleted = completedTasksCount === tasks.length;
+  const allTasksCompleted = tasks.length > 0 && completedTasksCount === tasks.length;
+
+  // Fetch daily tasks
+  useEffect(() => {
+
+    async function loadTasks() {
+
+      try {
+
+        const res = await fetch("http://localhost:8000/goal/daily");
+        const data = await res.json();
+
+        if (Array.isArray(data)) {
+
+          const formatted = data.map((t: any) => ({
+            id: t.id,
+            title: t.title,
+            difficulty: t.difficulty,
+            xp: t.xp,
+            completed: t.completed
+          }));
+
+          setTasks(formatted);
+
+        } else {
+          setTasks([]);
+        }
+
+      } catch (err) {
+        console.error("Failed to load daily quests", err);
+      }
+
+      setLoading(false);
+    }
+
+    loadTasks();
+
+  }, []);
 
   useEffect(() => {
     if (allTasksCompleted && completedTasksCount > 0) {
@@ -70,18 +71,41 @@ export function Dashboard() {
     }
   }, [allTasksCompleted, completedTasksCount]);
 
-  const handleTaskComplete = (taskId: string, xp: number) => {
-    setTasks(prevTasks =>
-      prevTasks.map(task =>
-        task.id === taskId ? { ...task, completed: true } : task
-      )
+  async function handleTaskComplete(taskId: number, xp: number) {
+
+    try {
+
+      await fetch(
+        `http://localhost:8000/goal/task/${taskId}/complete`,
+        { method: "POST" }
+      );
+
+      setTasks(prev =>
+        prev.map(task =>
+          task.id === taskId ? { ...task, completed: true } : task
+        )
+      );
+
+      onXPGain(xp);
+
+    } catch (err) {
+      console.error("Failed to complete task", err);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-400">
+        Loading daily quests...
+      </div>
     );
-    onXPGain(xp);
-  };
+  }
 
   return (
     <div className="h-full overflow-y-auto p-8 bg-gradient-to-br from-[#0a0e27] via-[#0d1128] to-[#0a0e27]">
-      {/* Animated Background Particles */}
+
+      {/* Background particles */}
+
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         {[...Array(20)].map((_, i) => (
           <motion.div
@@ -105,79 +129,119 @@ export function Dashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto space-y-8 relative z-10">
-        {/* Welcome Header */}
+
+        {/* Welcome */}
+
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
         >
+
           <h2 className="text-3xl font-bold text-white mb-2">
-            Welcome back, Champion! 👋
+            Welcome back, Champion 👋
           </h2>
+
           <p className="text-gray-400">
             You have {tasks.length - completedTasksCount} quests waiting for you today
           </p>
+
         </motion.div>
 
-        {/* Current Mission Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <MilestoneCard
-            title="Launch My First Product"
-            description="Build and ship a complete web application to production"
-            currentProgress={12}
-            totalSteps={20}
-          />
-        </motion.div>
+        {/* If no tasks yet */}
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Daily Quests Panel */}
-          <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-white">Daily Quests</h3>
-              <span className="text-sm text-gray-400">
-                {completedTasksCount}/{tasks.length} completed
-              </span>
-            </div>
+        {tasks.length === 0 && (
 
-            <div className="space-y-3">
-              {tasks.map((task, index) => (
-                <motion.div
-                  key={task.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <DailyTaskCard
-                    id={task.id}
-                    title={task.title}
-                    difficulty={task.difficulty}
-                    xpReward={task.xpReward}
-                    completed={task.completed}
-                    onComplete={handleTaskComplete}
-                  />
-                </motion.div>
-              ))}
-            </div>
+          <div className="bg-gray-900/40 border border-cyan-500/20 rounded-xl p-8 text-center">
+
+            <h3 className="text-xl font-bold text-white mb-3">
+              No active quest yet
+            </h3>
+
+            <p className="text-gray-400 mb-6">
+              Create your first goal to start your journey.
+            </p>
+
+            <a
+              href="/create-goal"
+              className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg text-white font-medium hover:scale-105 transition"
+            >
+              Create Your First Goal
+            </a>
+
           </div>
 
-          {/* Motivation Panel */}
-          <div className="space-y-6">
-            <MotivationPanel
-              streak={7}
-              tasksCompletedToday={completedTasksCount}
-              totalTasksToday={tasks.length}
-            />
+        )}
+
+        {/* Daily Tasks */}
+
+        {tasks.length > 0 && (
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <div className="lg:col-span-2 space-y-4">
+
+              <div className="flex items-center justify-between mb-4">
+
+                <h3 className="text-xl font-bold text-white">
+                  Daily Quests
+                </h3>
+
+                <span className="text-sm text-gray-400">
+                  {completedTasksCount}/{tasks.length} completed
+                </span>
+
+              </div>
+
+              <div className="space-y-3">
+
+                {tasks.map((task, index) => (
+
+                  <motion.div
+                    key={task.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+
+                    <DailyTaskCard
+                      id={task.id}
+                      title={task.title}
+                      difficulty={task.difficulty}
+                      xp={task.xp}
+                      completed={task.completed}
+                      onComplete={() => handleTaskComplete(task.id, task.xp)}
+                    />
+
+                  </motion.div>
+
+                ))}
+
+              </div>
+
+            </div>
+
+            {/* Motivation Panel */}
+
+            <div className="space-y-6">
+
+              <MotivationPanel
+                streak={7}
+                tasksCompletedToday={completedTasksCount}
+                totalTasksToday={tasks.length}
+              />
+
+            </div>
+
           </div>
-        </div>
+
+        )}
+
       </div>
 
-      {/* Confetti Effect */}
+      {/* Confetti */}
+
       {showConfetti && <Confetti />}
+
     </div>
   );
 }
