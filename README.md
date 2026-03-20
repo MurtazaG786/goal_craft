@@ -1,6 +1,6 @@
 # GoalCraft 🚀
 
-GoalCraft is an **AI-powered goal planning system** that transforms high-level goals into structured milestones and daily tas.
+GoalCraft is an **AI-powered goal planning system** that transforms high-level goals into structured milestones and daily tasks.
 
 Instead of vague goals like *“Learn Machine Learning”*, GoalCraft uses an **LLM-based planning pipeline** to automatically generate a clear roadmap.
 
