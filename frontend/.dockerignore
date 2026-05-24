@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.git/
+.gitignore
+*.py
+README.md
+*.log
+.vscode/
+.idea/

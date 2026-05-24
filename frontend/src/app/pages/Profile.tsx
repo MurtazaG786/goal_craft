@@ -19,7 +19,7 @@ interface Achievement {
 }
 
 const avatarList = [
-"🧙","🧑‍🚀","🐱","🐸","🐼","🦊","🐵","👾","🤖","🐯","🐨","🐧"
+"🐧","🧙","🧑‍🚀","🐱","🐸","🐼","🦊","🐵","👾","🤖","🐯","🐨"
 ]
 
 export function Profile(){
@@ -27,7 +27,7 @@ export function Profile(){
 const { user, updateUser } = useAuth()
 
 const [avatar,setAvatar] = useState(user?.avatar || "🧑‍🚀")
-const [name,setName] = useState(user?.username || "GoalCraft Adventurer")
+const [name,setName] = useState(user?.username || "User")
 
 const [editOpen,setEditOpen] = useState(false)
 const [tempAvatar,setTempAvatar] = useState(avatar)
@@ -130,20 +130,26 @@ return a
 
 }
 
-function saveProfile(){
+async function saveProfile(){
 
-setAvatar(tempAvatar)
-setName(tempName)
+try {
+  const res = await API.put("/auth/me", {
+    username: tempName,
+    avatar: tempAvatar
+  })
+  
+  setAvatar(res.data.avatar)
+  setName(res.data.username)
 
-updateUser({
-  avatar: tempAvatar,
-  username: tempName
-})
+  updateUser({
+    avatar: res.data.avatar,
+    username: res.data.username
+  })
 
-// TODO: In a full app, we would send a PUT /auth/me request here to save avatar and name
-// For now we just update local state
-
-setEditOpen(false)
+  setEditOpen(false)
+} catch(err) {
+  console.error("Failed to update profile", err)
+}
 
 }
 

@@ -90,6 +90,10 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         "streak": user.streak
     }
 
+class UserUpdate(BaseModel):
+    username: str
+    avatar: str
+
 @router.get("/me")
 def read_users_me(current_user: Player = Depends(get_current_user)):
     return {
@@ -101,3 +105,24 @@ def read_users_me(current_user: Player = Depends(get_current_user)):
         "level": current_user.level,
         "streak": current_user.streak
     }
+
+@router.put("/me")
+def update_profile(
+    user_update: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: Player = Depends(get_current_user)
+):
+    current_user.username = user_update.username
+    current_user.avatar = user_update.avatar
+    db.commit()
+    db.refresh(current_user)
+    return {
+        "id": current_user.id,
+        "email": current_user.email,
+        "username": current_user.username,
+        "avatar": current_user.avatar,
+        "xp": current_user.xp,
+        "level": current_user.level,
+        "streak": current_user.streak
+    }
+

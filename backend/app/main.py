@@ -19,7 +19,8 @@ async def lifespan(app: FastAPI):
 
     print("Checking database...")
 
-    # Recreate tables if they don't exist
+    # Alembic handles migrations via `alembic upgrade head` (run before app start).
+    # create_all() is kept as a safety net for new tables not yet in a migration.
     Base.metadata.create_all(bind=engine)
 
     print("Database ready")

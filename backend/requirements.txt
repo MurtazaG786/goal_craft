@@ -8,6 +8,8 @@ google-genai
 langgraph
 langchain
 pydantic
+email-validator
+alembic
 python-jose[cryptography]
 passlib[bcrypt]
 python-multipart

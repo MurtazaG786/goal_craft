@@ -214,8 +214,8 @@ def complete_task(task_id: int, db: Session = Depends(get_db), current_user: Pla
     # XP logic
     xp_map = {
         "easy": 10,
-        "medium": 20,
-        "hard": 40
+        "medium": 25,
+        "hard": 50
     }
 
     gained_xp = task.xp if task.xp is not None else xp_map.get(task.difficulty, 10)

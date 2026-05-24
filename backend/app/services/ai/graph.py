@@ -1,6 +1,5 @@
 from langgraph.graph import StateGraph, END
-from typing import TypedDict,List,Dict
-from langgraph.graph import StateGraph, END
+from typing import TypedDict, List, Dict
 
 from app.services.ai.milestone_agent import generate_milestones
 from app.services.ai.task_agent import generate_tasks
@@ -34,7 +33,6 @@ def schedule_node(state):
     return {"tasks": tasks}
 
 
-from app.services.ai.planner import generate_plan
 
 class GoalState(TypedDict,total=False):
     goal: str
