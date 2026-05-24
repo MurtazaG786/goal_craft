@@ -13,80 +13,65 @@ interface SideQuest {
   completed: boolean;
 }
 
-const mockSideQuests: SideQuest[] = [
-  {
-    id: 1,
-    title: "Read a Book Chapter",
-    description: "Expand your knowledge by reading 20+ pages",
-    category: "Learning",
-    xpReward: 75,
-    difficulty: "Easy",
-    icon: Book,
-    completed: false,
-  },
-  {
-    id: 2,
-    title: "30-Minute Workout",
-    description: "Complete any physical exercise for 30 minutes",
-    category: "Health",
-    xpReward: 100,
-    difficulty: "Medium",
-    icon: Dumbbell,
-    completed: false,
-  },
-  {
-    id: 3,
-    title: "Meditation Session",
-    description: "Practice mindfulness for 15 minutes",
-    category: "Wellness",
-    xpReward: 60,
-    difficulty: "Easy",
-    icon: Brain,
-    completed: true,
-  },
-  {
-    id: 4,
-    title: "Learn Something New",
-    description: "Complete an online tutorial or course module",
-    category: "Learning",
-    xpReward: 150,
-    difficulty: "Hard",
-    icon: Coffee,
-    completed: false,
-  },
-  {
-    id: 5,
-    title: "Creative Time",
-    description: "Spend 30 minutes on a creative hobby",
-    category: "Creativity",
-    xpReward: 80,
-    difficulty: "Medium",
-    icon: Music,
-    completed: false,
-  },
-  {
-    id: 6,
-    title: "Help Someone",
-    description: "Perform a random act of kindness",
-    category: "Social",
-    xpReward: 120,
-    difficulty: "Medium",
-    icon: Heart,
-    completed: false,
-  },
-];
+const iconMap: Record<string, any> = {
+  Learning: Book,
+  Health: Dumbbell,
+  Wellness: Brain,
+  Creativity: Music,
+  Social: Heart,
+  Default: Coffee,
+};
+
+import { useEffect } from "react";
+import API, { completeSideQuest } from "../../api/goalApi";
+import { useAuth } from "../context/AuthContext";
 
 export function SideQuests() {
-  const [quests, setQuests] = useState(mockSideQuests);
+  const [quests, setQuests] = useState<SideQuest[]>([]);
   const [filter, setFilter] = useState<string>("all");
+  const [loading, setLoading] = useState(true);
+  const { updateUser } = useAuth();
 
-  const handleCompleteQuest = (questId: number) => {
-    setQuests(prev =>
-      prev.map(quest =>
-        quest.id === questId ? { ...quest, completed: true } : quest
-      )
-    );
+  useEffect(() => {
+    async function loadQuests() {
+      try {
+        const res = await API.get("/goal/side_quests");
+        setQuests(res.data);
+      } catch (err) {
+        console.error("Failed to load side quests", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadQuests();
+  }, []);
+
+  const handleCompleteQuest = async (questId: number) => {
+    const quest = quests.find(q => q.id === questId);
+    if (!quest || quest.completed) return;
+
+    try {
+      const res = await completeSideQuest(quest.xpReward);
+      const data = res.data;
+
+      setQuests(prev =>
+        prev.map(q =>
+          q.id === questId ? { ...q, completed: true } : q
+        )
+      );
+
+      updateUser({
+        xp: data.total_xp,
+        level: data.level,
+        streak: data.streak
+      });
+      window.dispatchEvent(new CustomEvent("questCompleted"));
+    } catch (err) {
+      console.error("Failed to complete side quest", err);
+    }
   };
+
+  if (loading) return <div className="text-white text-center mt-20">Loading quests...</div>;
 
   const filteredQuests = filter === "all" 
     ? quests 
@@ -173,7 +158,7 @@ export function SideQuests() {
         {/* Quest Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredQuests.map((quest, index) => {
-            const Icon = quest.icon;
+            const Icon = iconMap[quest.category] || iconMap.Default;
             const difficultyColor = 
               quest.difficulty === "Easy" ? "green" :
               quest.difficulty === "Medium" ? "yellow" : "red";

@@ -1,12 +1,11 @@
-import os
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+import json
 import google.genai as genai
 from app.core.config import settings
-import json
 
-client=genai.Client(api_key=settings.GOOGLE_API_KEY)
+client = genai.Client(api_key=settings.GOOGLE_API_KEY)
 
-def generate_plan(goal: str, deadline: str,difficulty: str,description: str):
+
+def generate_plan(goal: str, deadline: str, difficulty: str, description: str):
 
     prompt_text = f"""
 You are an expert career and productivity planner.
@@ -42,11 +41,9 @@ Return JSON in this format:
 """
 
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model=settings.GEMINI_MODEL,
         contents=prompt_text)
 
-   
     text = response.text
     plan = json.loads(text)
     return plan
-

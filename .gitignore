@@ -7,17 +7,23 @@ venv/
 env/
 
 # Conda
-*.conda
-*.env
+.conda/
 
+# Node
 node_modules/
-frontend/node_modules/
 package-lock.json
+
+# Environment variables (NEVER commit secrets)
 .env
+*.env
+!.env.example
+
+# Database files
+*.db
+
+# Build outputs
 dist/
 build/
-# Environment variables
-.env
 
 # Streamlit cache
 .streamlit/
@@ -29,10 +35,6 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
-
-# Python build
-build/
-dist/
 
 # Logs
 *.log

@@ -104,34 +104,6 @@ export function Sidebar({ activeItem = "dashboard" }: SidebarProps) {
         })}
       </div>
 
-      {/* Bottom decoration */}
-      <div className="absolute bottom-8 left-6 right-6">
-        <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 backdrop-blur-sm">
-          <div className="flex items-center gap-3">
-            <motion.div
-              className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center"
-              animate={{
-                boxShadow: [
-                  "0 0 20px rgba(168, 85, 247, 0.4)",
-                  "0 0 30px rgba(168, 85, 247, 0.6)",
-                  "0 0 20px rgba(168, 85, 247, 0.4)",
-                ],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            >
-              <span className="text-lg">✨</span>
-            </motion.div>
-            <div>
-              <p className="text-xs text-gray-400">Keep going!</p>
-              <p className="text-sm font-bold text-purple-400">7 day streak</p>
-            </div>
-          </div>
-        </div>
-      </div>
     </aside>
   );
 }

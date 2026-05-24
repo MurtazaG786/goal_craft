@@ -1,3 +1,4 @@
+import { createGoal } from "../../api/goalApi";
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useNavigate } from "react-router";
@@ -8,6 +9,7 @@ export function CreateGoal() {
   const navigate = useNavigate();
 
   const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState("");
 
   const [formData, setFormData] = useState({
     title: "",
@@ -20,6 +22,7 @@ export function CreateGoal() {
 
     e.preventDefault();
     setIsGenerating(true);
+    setError("");
 
     try {
 
@@ -32,15 +35,7 @@ export function CreateGoal() {
 
       console.log("Sending goal:", payload);
 
-      const res = await fetch("http://localhost:8000/goal/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await res.json();
+      const data = await createGoal(payload);
 
       console.log("Backend response:", data);
 
@@ -52,7 +47,9 @@ export function CreateGoal() {
 
     } catch (err) {
 
+      const errorMessage = (err as any)?.response?.data?.detail || "Goal creation failed";
       console.error("Goal creation failed:", err);
+      setError(errorMessage);
       setIsGenerating(false);
 
     }
@@ -120,6 +117,10 @@ export function CreateGoal() {
           <p className="text-gray-400 text-lg">
             Every great journey begins with a single goal
           </p>
+
+          {error && (
+            <p className="mt-4 text-red-400 text-sm">{error}</p>
+          )}
 
         </motion.div>
 

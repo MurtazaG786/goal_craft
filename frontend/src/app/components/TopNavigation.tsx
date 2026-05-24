@@ -2,12 +2,14 @@ import { motion } from "motion/react";
 import { Sparkles } from "lucide-react";
 import * as Progress from "@radix-ui/react-progress";
 import { useState, useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
 
 export function TopNavigation() {
-
-  const [xp, setXP] = useState(0)
-  const [avatar, setAvatar] = useState("🧑‍🚀")
-  const [mascotExpression, setMascotExpression] = useState("🚀")
+  const { user } = useAuth();
+  const xp = user?.xp ?? 0;
+  const avatar = user?.avatar || "🧑‍🚀";
+  const [bounceKey, setBounceKey] = useState(0)
+  const [spinKey, setSpinKey] = useState(0)
 
   // XP curve (same as Profile)
   function xpForLevel(level:number){
@@ -36,44 +38,25 @@ export function TopNavigation() {
 
   const xpPercentage = (currentXP / xpToNext) * 100
 
-  // Sync with localStorage
-  useEffect(()=>{
-
-    function loadUserData(){
-
-      const storedXP = Number(localStorage.getItem("xp")) || 0
-      const storedAvatar = localStorage.getItem("avatar") || "🧑‍🚀"
-
-      setXP(storedXP)
-      setAvatar(storedAvatar)
-
+  useEffect(() => {
+    const handleQuestCompleted = () => {
+      setBounceKey((prev) => prev + 1)
     }
 
-    loadUserData()
-
-    const interval = setInterval(loadUserData,1000)
-
-    return ()=>clearInterval(interval)
-
-  },[])
-
-  // Mascot reaction
-  useEffect(()=>{
-
-    if(xpPercentage > 80){
-      setMascotExpression("🎉")
-    }
-    else if(xpPercentage > 50){
-      setMascotExpression("😎")
-    }
-    else if(xpPercentage > 20){
-      setMascotExpression("🚀")
-    }
-    else{
-      setMascotExpression("💪")
+    const handleLevelUp = () => {
+      setSpinKey((prev) => prev + 1)
     }
 
-  },[xpPercentage])
+    window.addEventListener("questCompleted", handleQuestCompleted)
+    window.addEventListener("levelUp", handleLevelUp)
+
+    return () => {
+      window.removeEventListener("questCompleted", handleQuestCompleted)
+      window.removeEventListener("levelUp", handleLevelUp)
+    }
+  }, [])
+
+  const isAvatarUrl = avatar.startsWith("http")
 
   return(
 
@@ -153,23 +136,24 @@ export function TopNavigation() {
   {/* Mascot */}
 
   <motion.div
-  className="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg cursor-pointer"
-  animate={{y:[0,-4,0]}}
-  transition={{
-  duration:2,
-  repeat:Infinity,
-  ease:"easeInOut"
-  }}
+  key={`spin-${spinKey}`}
+  className="flex items-center justify-center"
+  animate={{ rotate: spinKey > 0 ? [0, 360] : 0 }}
+  transition={{ duration: 0.8, ease: "easeInOut" }}
   >
 
   <motion.span
-  className="text-2xl"
-  key={mascotExpression}
-  initial={{scale:0}}
-  animate={{scale:1}}
+  key={`bounce-${bounceKey}`}
+  className="text-3xl"
+  animate={{ y: bounceKey > 0 ? [0, -10, 0] : 0 }}
+  transition={{ duration: 0.5, ease: "easeOut" }}
   >
 
-  {mascotExpression}
+  {isAvatarUrl ? (
+    <img src={avatar} alt="Mascot avatar" className="w-8 h-8" />
+  ) : (
+    avatar
+  )}
 
   </motion.span>
 
@@ -192,8 +176,13 @@ export function TopNavigation() {
   whileHover={{scale:1.1}}
   >
 
-  {avatar}
-
+  <div className="w-10 h-10 rounded-full bg-gray-800 border border-cyan-500/30 flex items-center justify-center overflow-hidden">
+  {isAvatarUrl ? (
+    <img src={avatar} alt="User avatar" className="w-full h-full object-cover" />
+  ) : (
+    <span className="text-xl">{avatar}</span>
+  )}
+  </div>
   </motion.div>
 
   </div>

@@ -7,7 +7,9 @@ def assign_xp(tasks):
     }
 
     for t in tasks:
-        difficulty = t.get("difficulty", "easy")
+        difficulty = str(t.get("difficulty", "easy")).strip().lower()
+        if difficulty not in xp_map:
+            difficulty = "easy"
         t["xp"] = xp_map[difficulty]
 
     return tasks

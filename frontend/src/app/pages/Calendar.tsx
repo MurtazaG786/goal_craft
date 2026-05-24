@@ -1,3 +1,4 @@
+import API from "../../api/goalApi";
 import { useState, useEffect } from "react"
 import { motion } from "motion/react"
 import { ChevronLeft, ChevronRight, Circle, Target } from "lucide-react"
@@ -43,20 +44,20 @@ export function Calendar() {
 
     try {
 
-      const dailyRes = await fetch("http://localhost:8000/goal/daily")
-      const dailyData = await dailyRes.json()
+      const dailyRes = await API.get("/goal/daily")
+      const dailyData = dailyRes.data
 
       setTasks(dailyData)
 
       if (goalId) {
 
-        const milestoneRes = await fetch(`http://localhost:8000/goal/${goalId}/milestones`)
-        const milestoneData = await milestoneRes.json()
+        const milestoneRes = await API.get(`/goal/${goalId}/milestones`)
+        const milestoneData = milestoneRes.data
 
         setMilestones(milestoneData.milestones || [])
 
-        const goalRes = await fetch(`http://localhost:8000/goal/${goalId}`)
-        const goalData = await goalRes.json()
+        const goalRes = await API.get(`/goal/${goalId}`)
+        const goalData = goalRes.data
 
         setGoalDeadline(goalData.deadline)
 

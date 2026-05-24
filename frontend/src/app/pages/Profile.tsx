@@ -1,6 +1,8 @@
 import { motion } from "motion/react"
 import { useState, useEffect } from "react"
 import { Award, Pencil } from "lucide-react"
+import { useAuth } from "../context/AuthContext"
+import API from "../../api/goalApi"
 
 interface Task {
   id:number
@@ -22,15 +24,17 @@ const avatarList = [
 
 export function Profile(){
 
-const [avatar,setAvatar] = useState(localStorage.getItem("avatar") || "🧑‍🚀")
-const [name,setName] = useState(localStorage.getItem("username") || "GoalCraft Adventurer")
+const { user, updateUser } = useAuth()
+
+const [avatar,setAvatar] = useState(user?.avatar || "🧑‍🚀")
+const [name,setName] = useState(user?.username || "GoalCraft Adventurer")
 
 const [editOpen,setEditOpen] = useState(false)
 const [tempAvatar,setTempAvatar] = useState(avatar)
 const [tempName,setTempName] = useState(name)
 
 const [tasks,setTasks] = useState<Task[]>([])
-const [xp,setXP] = useState(Number(localStorage.getItem("xp")) || 0)
+const [xp,setXP] = useState(user?.xp || 0)
 
 function xpForLevel(level:number){
 return 100 + (level-1)*50
@@ -63,15 +67,20 @@ const [achievements,setAchievements] = useState<Achievement[]>([
 ])
 
 useEffect(()=>{
+if(user){
+  setXP(user.xp)
+  setName(user.username)
+  setAvatar(user.avatar)
+}
 loadProfile()
-},[])
+},[user])
 
 async function loadProfile(){
 
 try{
 
-const res = await fetch("http://localhost:8000/goal/daily")
-const data = await res.json()
+const res = await API.get("/goal/daily")
+const data = res.data
 
 setTasks(data)
 checkAchievements(data)
@@ -86,7 +95,7 @@ function addXP(amount:number){
 
 const newXP = xp + amount
 setXP(newXP)
-localStorage.setItem("xp",String(newXP))
+// Backend takes care of actual XP on task completion, this is optimistic UI for achievements
 
 }
 
@@ -126,8 +135,13 @@ function saveProfile(){
 setAvatar(tempAvatar)
 setName(tempName)
 
-localStorage.setItem("avatar",tempAvatar)
-localStorage.setItem("username",tempName)
+updateUser({
+  avatar: tempAvatar,
+  username: tempName
+})
+
+// TODO: In a full app, we would send a PUT /auth/me request here to save avatar and name
+// For now we just update local state
 
 setEditOpen(false)
 

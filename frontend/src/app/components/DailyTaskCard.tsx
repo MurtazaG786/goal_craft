@@ -8,7 +8,7 @@ interface DailyTaskCardProps {
   difficulty: "easy" | "medium" | "hard";
   xp: number;
   completed: boolean;
-  onComplete: (xp: number) => void;
+  onComplete: (taskId: number) => Promise<void>;
 }
 
 const difficultyColors = {
@@ -36,17 +36,10 @@ export function DailyTaskCard({
 
     try {
 
-      const res = await fetch(
-        `http://localhost:8000/goal/task/${id}/complete`,
-        { method: "POST" }
-      );
-
-      const data = await res.json();
+      await onComplete(id);
 
       setShowXPAnimation(true);
       setIsCompleted(true);
-
-      onComplete(data.xp_gained);
 
       setTimeout(() => {
         setShowXPAnimation(false);

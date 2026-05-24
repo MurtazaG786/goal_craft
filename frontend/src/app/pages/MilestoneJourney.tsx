@@ -1,3 +1,4 @@
+import API from "../../api/goalApi";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { CheckCircle2, Circle, Lock, Target, X } from "lucide-react";
@@ -24,8 +25,6 @@ export function MilestoneJourney() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const goalId = localStorage.getItem("goal_id") || 1
-
   useEffect(() => {
     fetchMilestones();
   }, []);
@@ -34,8 +33,8 @@ export function MilestoneJourney() {
 
     try {
 
-      const res = await fetch(`http://localhost:8000/goal/${goalId}/milestones`);
-      const data = await res.json();
+      const res = await API.get("/goal/milestones");
+      const data = res.data;
       console.log("milestones api ")
       if (Array.isArray(data)) {
         setMilestones(data || []);
@@ -56,11 +55,9 @@ export function MilestoneJourney() {
 
     try {
 
-      const res = await fetch(
-        `http://localhost:8000/goal/milestone/${milestone.id}/tasks`
-      );
+      const res = await API.get(`/goal/milestone/${milestone.id}/tasks`);
 
-      const data = await res.json();
+      const data = res.data;
 
       if (Array.isArray(data)) {
         setTasks(data);
@@ -79,10 +76,7 @@ export function MilestoneJourney() {
 
     try {
 
-      await fetch(
-        `http://localhost:8000/goal/task/${taskId}/complete`,
-        { method: "POST" }
-      );
+      await API.post(`/goal/task/${taskId}/complete`);
 
       setTasks(prev =>
         prev.map(t =>

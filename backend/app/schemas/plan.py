@@ -11,6 +11,7 @@ class Task(BaseModel):
     xp:int | None=None
 
 class Planresponse(BaseModel):
+    goal_id:int
     milestones:List[Milestone]
     tasks:List[Task]
 

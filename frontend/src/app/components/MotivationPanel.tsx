@@ -20,7 +20,9 @@ export function MotivationPanel({
   tasksCompletedToday,
   totalTasksToday,
 }: MotivationPanelProps) {
-  const completionRate = (tasksCompletedToday / totalTasksToday) * 100;
+  const completionRate = totalTasksToday > 0
+    ? (tasksCompletedToday / totalTasksToday) * 100
+    : 0;
   const messageIndex = Math.min(
     Math.floor((completionRate / 100) * motivationalMessages.length),
     motivationalMessages.length - 1

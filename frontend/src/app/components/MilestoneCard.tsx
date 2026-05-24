@@ -15,7 +15,9 @@ export function MilestoneCard({
   currentProgress,
   totalSteps,
 }: MilestoneCardProps) {
-  const progressPercentage = (currentProgress / totalSteps) * 100;
+  const progressPercentage = totalSteps > 0
+    ? (currentProgress / totalSteps) * 100
+    : 0;
 
   return (
     <motion.div

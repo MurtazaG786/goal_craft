@@ -1,9 +1,11 @@
+import API from "../../api/goalApi";
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { useOutletContext } from "react-router";
 import { DailyTaskCard } from "../components/DailyTaskCard";
 import { MotivationPanel } from "../components/MotivationPanel";
 import { Confetti } from "../components/Confetti";
+import { useAuth } from "../context/AuthContext";
+import { MilestoneCard } from "../components/MilestoneCard";
 
 interface Task {
   id: number;
@@ -13,17 +15,20 @@ interface Task {
   completed: boolean;
 }
 
-interface OutletContext {
-  onXPGain: (xp: number) => void;
+interface Milestone {
+  id: number;
+  title: string;
+  status: "completed" | "active" | "locked";
 }
 
 export function Dashboard() {
-
-  const { onXPGain } = useOutletContext<OutletContext>();
+  const { updateUser, user } = useAuth();
 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [currentMilestone, setCurrentMilestone] = useState<Milestone | null>(null);
+  const [milestoneProgress, setMilestoneProgress] = useState({ completed: 0, total: 0 });
 
   const completedTasksCount = tasks.filter(t => t.completed).length;
   const allTasksCompleted = tasks.length > 0 && completedTasksCount === tasks.length;
@@ -35,8 +40,8 @@ export function Dashboard() {
 
       try {
 
-        const res = await fetch("http://localhost:8000/goal/daily");
-        const data = await res.json();
+        const res = await API.get("/goal/daily");
+        const data = res.data;
 
         if (Array.isArray(data)) {
 
@@ -63,6 +68,36 @@ export function Dashboard() {
 
     loadTasks();
 
+    async function loadMilestones() {
+      try {
+        const milestoneRes = await API.get("/goal/milestones");
+        const milestoneData = Array.isArray(milestoneRes.data)
+          ? milestoneRes.data
+          : milestoneRes.data.milestones || [];
+
+        const active = milestoneData.find((m: Milestone) => m.status === "active")
+          || milestoneData[0]
+          || null;
+
+        setCurrentMilestone(active || null);
+
+        if (active) {
+          const taskRes = await API.get(`/goal/milestone/${active.id}/tasks`);
+          const taskData = Array.isArray(taskRes.data) ? taskRes.data : [];
+          const completed = taskData.filter((t: any) => t.completed).length;
+          setMilestoneProgress({ completed, total: taskData.length });
+        } else {
+          setMilestoneProgress({ completed: 0, total: 0 });
+        }
+      } catch (err) {
+        console.error("Failed to load milestones", err);
+        setCurrentMilestone(null);
+        setMilestoneProgress({ completed: 0, total: 0 });
+      }
+    }
+
+    loadMilestones();
+
   }, []);
 
   useEffect(() => {
@@ -71,22 +106,23 @@ export function Dashboard() {
     }
   }, [allTasksCompleted, completedTasksCount]);
 
-  async function handleTaskComplete(taskId: number, xp: number) {
+  async function handleTaskComplete(taskId: number) {
 
     try {
-
-      await fetch(
-        `http://localhost:8000/goal/task/${taskId}/complete`,
-        { method: "POST" }
-      );
+      const res = await API.post(`/goal/task/${taskId}/complete`);
+      const data = res.data;
 
       setTasks(prev =>
         prev.map(task =>
           task.id === taskId ? { ...task, completed: true } : task
         )
       );
-
-      onXPGain(xp);
+      updateUser({
+        xp: data.total_xp,
+        level: data.level,
+        streak: data.streak
+      });
+      window.dispatchEvent(new CustomEvent("questCompleted"));
 
     } catch (err) {
       console.error("Failed to complete task", err);
@@ -172,6 +208,17 @@ export function Dashboard() {
 
         )}
 
+        {/* Current Mission */}
+
+        {currentMilestone && (
+          <MilestoneCard
+            title={currentMilestone.title}
+            description="Milestone in your journey"
+            currentProgress={milestoneProgress.completed}
+            totalSteps={milestoneProgress.total}
+          />
+        )}
+
         {/* Daily Tasks */}
 
         {tasks.length > 0 && (
@@ -209,7 +256,7 @@ export function Dashboard() {
                       difficulty={task.difficulty}
                       xp={task.xp}
                       completed={task.completed}
-                      onComplete={() => handleTaskComplete(task.id, task.xp)}
+                      onComplete={() => handleTaskComplete(task.id)}
                     />
 
                   </motion.div>
@@ -225,7 +272,7 @@ export function Dashboard() {
             <div className="space-y-6">
 
               <MotivationPanel
-                streak={7}
+                streak={user?.streak ?? 0}
                 tasksCompletedToday={completedTasksCount}
                 totalTasksToday={tasks.length}
               />
