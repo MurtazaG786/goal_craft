@@ -19,7 +19,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
     username: str
-    avatar: str = "adventurer"
+    avatar: str = "🐧"
 
 class Token(BaseModel):
     access_token: str

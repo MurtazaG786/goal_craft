@@ -9,7 +9,7 @@ class Player(Base):
     email = Column(String, unique=True, index=True, nullable=True)
     hashed_password = Column(String, nullable=True)
     username = Column(String, default="GoalCraft Adventurer")
-    avatar = Column(String, default="adventurer")
+    avatar = Column(String, default="🐧")
 
     xp = Column(Integer, default=0)
     level = Column(Integer, default=1)

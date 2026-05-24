@@ -26,7 +26,7 @@ def upgrade() -> None:
         sa.Column('email', sa.String(), nullable=True, unique=True, index=True),
         sa.Column('hashed_password', sa.String(), nullable=True),
         sa.Column('username', sa.String(), server_default='GoalCraft Adventurer'),
-        sa.Column('avatar', sa.String(), server_default='adventurer'),
+        sa.Column('avatar', sa.String(), server_default='🐧'),
         sa.Column('xp', sa.Integer(), server_default='0'),
         sa.Column('level', sa.Integer(), server_default='1'),
         sa.Column('streak', sa.Integer(), server_default='0'),

@@ -22,7 +22,7 @@ export function Register() {
         email,
         password,
         username,
-        avatar: "adventurer"
+        avatar: "🐧"
       });
       login(res.data.access_token, {
         id: res.data.user_id,
